@@ -1,0 +1,245 @@
+Function ExtractNumber(sText As String) As Integer
+    Dim iCount As Integer, i As Integer, iLoop As Integer
+    Dim lNum As String
+    Dim vVal, vVal2
+    iLoop = Len(sText)
+    For iCount = iLoop To 1 Step -1
+            vVal = Mid(sText, iCount, 1)
+            If IsNumeric(vVal) Then
+                i = i + 1
+                lNum = Mid(sText, iCount, 1) & lNum
+                If IsNumeric(lNum) Then
+                    If CDbl(lNum) < 0 Then Exit For
+                    Else
+                        lNum = Replace(lNum, Left(lNum, 1), "", , 1)
+                    End If
+                End If
+            If i = 1 And lNum <> vbNullString Then lNum = CDbl(Mid(lNum, 1, 1))
+        Next iCount
+    ExtractNumber = CInt(lNum)
+End Function
+
+
+
+Function ValExists(Val As String, Optional Ws As String) As Boolean
+    Dim TempR   As Integer
+    On Error Resume Next
+    If Ws = vbNullString Then Ws = ActiveSheet.Name
+    TempR = Sheets(Ws).Cells.Find(Val).Row
+    On Error GoTo 0
+    If TempR = 0 Then
+        ValExists = False
+    Else
+        ValExists = True
+    End If
+End Function
+
+
+
+
+Sub CustRepl( _
+    ByRef findValue As String, _
+    ByRef replaceValue As Variant, _
+    Optional ByRef Rng As Range, _
+    Optional ByRef Sh As String, _
+    Optional ByRef Wb As String)
+    'does a replace on a selected range/sheet/workbook
+    'USELESS? just use a normal replace?
+    Dim i As Integer
+    
+    If findValue = "" Then Exit Sub
+    If Not Rng Is Nothing Then
+        Rng.Replace What:=findValue, Replacement:=replaceValue, LookAt:=xlPart, _
+                SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, ReplaceFormat:=False
+    ElseIf Sh <> "" Then
+        Sheets(Sh).Cells.Replace What:=findValue, Replacement:=replaceValue, LookAt:=xlPart, _
+                SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, ReplaceFormat:=False
+    Else
+        For i = 1 To Wb.Sheets.Count
+            Sheets(i).Cells.Replace What:=findValue, Replacement:=replaceValue, LookAt:=xlPart, _
+                    SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, ReplaceFormat:=False
+        Next i
+    End If
+    End Sub
+
+
+
+Public Function EOMonth(InputDate As Date, Optional MonthsToAdd As Integer)
+' Returns the date of the last day of month, a specified number of months
+' following a given date.
+   Dim TotalMonths As Integer
+   Dim NewMonth As Integer
+   Dim NewYear As Integer
+
+   If IsMissing(MonthsToAdd) Then
+      MonthsToAdd = 0
+   End If
+
+   TotalMonths = Month(InputDate) + MonthsToAdd
+   NewMonth = TotalMonths - (12 * Int(TotalMonths / 12))
+   NewYear = Year(InputDate) + Int(TotalMonths / 12)
+
+   If NewMonth = 0 Then
+      NewMonth = 12
+      NewYear = NewYear - 1
+   End If
+
+   Select Case NewMonth
+      Case 1, 3, 5, 7, 8, 10, 12
+         EOMonth = DateSerial(NewYear, NewMonth, 31)
+      Case 4, 6, 9, 11
+         EOMonth = DateSerial(NewYear, NewMonth, 30)
+      Case 2
+         If Int(NewYear / 4) = NewYear / 4 Then
+            EOMonth = DateSerial(NewYear, NewMonth, 29)
+         Else
+            EOMonth = DateSerial(NewYear, NewMonth, 28)
+         End If
+   End Select
+End Function
+
+
+
+
+Function sSheetTabName( _
+    ByRef wkbProject As Workbook, _
+ ByRef sCodeName As String) As String
+    Dim wksSheet As Worksheet
+    For Each wksSheet In wkbProject.Worksheets
+        If wksSheet.CodeName = sCodeName Then
+            sSheetTabName = wksSheet.Name
+            Exit For
+        End If
+    Next wksSheet
+    If sSheetTabName = vbNullString then
+        sSheetTabName = "ERROR"
+    End If
+    End Function
+
+
+
+
+
+Function MName(Mnb As Integer, Lang As String) As String
+    Dim MEn()
+    Dim MFr()
+    MEn = Array("Janurary", "February", "March", "April", "May", "June", "July", "August", "September", "November", "December")
+    MFr = Array("Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Novembre", "Décembre")
+    MName = ""
+    Select Case UCase(Lang)
+        Case Is = "EN"
+            MName = MEn(Mnb)
+        Case Is = "FR"
+            MName = MFr(Mnb)
+        End Select
+End Function
+
+
+
+
+
+
+Sub HighLightSyntax( _
+    rCell As Range)
+    Dim sText As String
+    Dim SQLSyntax()
+    Dim i As Integer
+    Dim iLBound As Integer
+    Dim iUBound As Integer
+    Dim lPos As Integer
+    
+    'change syntax array as param
+    'change to function whuch returns array of keyword location in string??
+    
+    SQLSyntax = Array("ALL", "AND", "ANY", "AS", "ASC", "AVG", "BETWEEN", "BY", "CAST", _
+                            "CORRESPONDING", "COUNT", "CREATE", "CROSS", "DELETE", "DESC", "DISTINCT", _
+                            "DROP", "ESCAPE", "EXCEPT", "EXISTS", "FALSE", "FROM", "FULL", "GLOBAL", "GROUP", _
+                            "HAVING", "IN", "INNER", "INSERT", "INTERSECT", "INTO", "IS", "JOIN", "LEFT", "LIKE", _
+                            "LOCAL", "MATCH", "MAX", "MIN", "NATURAL", "NOT", "NULL", "ON", "OR", "ORDER", _
+                            "OUTER", "RIGHT", "SELECT", "SET", "SOME", "SUM", "TABLE", "TEMPORARY", "TRUE", _
+                            "UNION", "UNIQUE", "UNKNOWN", "UPDATE", "USING", "VALUES", "WHERE")
+    
+    iLBound = LBound(SQLSyntax)
+    iUBound = UBound(SQLSyntax)
+    
+    sText = rCell.Value
+    rCell.Font.ColorIndex = giSQL_DEFAULT_COLOR
+
+    'add string color change
+    
+    For i = iLBound To iUBound
+        lPos = InStr(1, sText, SQLSyntax(i))
+        If lPos > 0 Then
+            Do
+                rCell.Characters(lPos, Len(SQLSyntax(i))).Font.ColorIndex = giSQL_SYNTAX_COLOR
+                lPos = InStr(lPos + 1, sText, SQLSyntax(i))
+            Loop Until lPos = 0
+        End If
+    Next i
+    End Sub
+
+
+
+    
+
+Sub QuickSortNumericAscending( _
+    narray() As Double, inLow As Double, inHi As Double)
+    Dim pivot As Double
+    Dim tmpSwap As Double
+    Dim tmpLow As Double
+    Dim tmpHi  As Double
+    
+    tmpLow = inLow
+    tmpHi = inHi
+    pivot = narray((inLow + inHi) / 2)
+    
+    While (tmpLow <= tmpHi)
+        While (narray(tmpLow) < pivot And tmpLow < inHi)
+            tmpLow = tmpLow + 1
+        Wend
+        While (pivot < narray(tmpHi) And tmpHi > inLow)
+            tmpHi = tmpHi - 1
+        Wend
+        If (tmpLow <= tmpHi) Then
+            tmpSwap = narray(tmpLow)
+            narray(tmpLow) = narray(tmpHi)
+            narray(tmpHi) = tmpSwap
+            tmpLow = tmpLow + 1
+            tmpHi = tmpHi - 1
+        End If
+    Wend
+    
+    If (inLow < tmpHi) Then QuickSortNumericAscending narray(), inLow, tmpHi
+    If (tmpLow < inHi) Then QuickSortNumericAscending narray(), tmpLow, inHi
+End Sub
+
+Sub QuickSortNumericDescending( _
+    narray() As Double, inLow As Double, inHi As Double)
+    Dim pivot As Double
+    Dim tmpSwap As Double
+    Dim tmpLow As Double
+    Dim tmpHi  As Double
+    
+    tmpLow = inLow
+    tmpHi = inHi
+    
+    pivot = narray((inLow + inHi) / 2)
+    
+    While (tmpLow <= tmpHi)
+        While (narray(tmpLow) > pivot And tmpLow < inHi)
+            tmpLow = tmpLow + 1
+        Wend
+        While (pivot > narray(tmpHi) And tmpHi > inLow)
+            tmpHi = tmpHi - 1
+        Wend
+        If (tmpLow <= tmpHi) Then
+            tmpSwap = narray(tmpLow)
+            narray(tmpLow) = narray(tmpHi)
+            narray(tmpHi) = tmpSwap
+            tmpLow = tmpLow + 1
+            tmpHi = tmpHi - 1
+        End If
+    Wend
+    If (inLow < tmpHi) Then QuickSortNumericDescending narray(), inLow, tmpHi
+    If (tmpLow < inHi) Then QuickSortNumericDescending narray(), tmpLow, inHi
+End Sub

@@ -1,0 +1,49 @@
+Const SQLHEADER = "SQL Insert Script"
+
+Sub createImport()
+    Dim i As Integer
+    Dim j As Integer
+    Dim lastCol As Integer
+    Dim sql As String
+    
+    lastCol = LastColumn
+    
+    'check if script already exoists
+    If Cells(1, lastCol).Value = SQLHEADER Then
+        Exit Sub
+    End If
+    
+    For i = LastRow To 2 Step -1
+        'start of sql statement
+        sql = "=" & """INSERT INTO " + ActiveSheet.Name + " VALUES(""&"
+        
+        'add refernces to cells
+        For j = 1 To lastCol
+            sql = sql + "RC" + CStr(j) + " & "","" & "
+        Next
+        
+        'remove last comm and end sql and insert formula
+        sql = Left(sql, Len(sql) - 6) + """);"""
+        Cells(i, lastCol + 1).FormulaR1C1 = sql
+    
+    Next i
+    
+    Cells(1, lastCol + 1).Value = SQLHEADER
+End Sub
+
+Function LastRow( _
+    Optional ByVal Sh As String)
+    On Error Resume Next
+    If Sh = "" Then Sh = ActiveSheet.Name
+    LastRow = Sheets(Sh).Cells.Find("*", SearchOrder:=xlByRows, LookIn:=xlValues, SearchDirection:=xlPrevious).EntireRow.Row
+    If LastRow = "" Then LastRow = 1
+End Function
+
+Function LastColumn( _
+    Optional ByVal Sh As String)
+    On Error Resume Next
+    If Sh = "" Then Sh = ActiveSheet.Name
+    LastColumn = Sheets(Sh).Cells.Find("*", SearchOrder:=xlByColumns, LookIn:=xlValues, SearchDirection:=xlPrevious).EntireColumn.Column
+    If LastColumn = "" Then LastColumn = 1
+End Function
+
