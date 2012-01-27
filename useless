@@ -243,3 +243,23 @@ Sub QuickSortNumericDescending( _
     If (inLow < tmpHi) Then QuickSortNumericDescending narray(), inLow, tmpHi
     If (tmpLow < inHi) Then QuickSortNumericDescending narray(), tmpLow, inHi
 End Sub
+
+
+
+require 'win32ole'
+
+root = "D:/test/"
+ptrn = "**/TEST_FILE_*.txt"
+
+xl = WIN32OLE.new('Excel.Application')
+xl.visible = true
+
+Dir.chdir(root)
+dirList = Dir.glob(ptrn )
+
+dirList.each do |f|
+  wb = xl.workbooks.open(File.join(root, f))
+  wb.VBProject.VBComponents.Import('D:/tmp.bas')
+end
+
+#dirList.each {|f| puts File.join(root, f)  }
